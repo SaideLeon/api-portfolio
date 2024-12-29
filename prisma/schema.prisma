@@ -1,0 +1,417 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Usuário
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  name          String
+  password      String
+  profession    String?
+  bio           String?   @db.Text
+  avatar        String?
+  socialLinks   Json?     // {instagram, linkedin, github, etc}
+  settings      Json?     // {theme, layout, etc}
+  role          UserRole  @default(USER)
+  status        UserStatus @default(ACTIVE)
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relações
+  projects      Project[]
+  posts         Post[]
+  products      Product[]
+  messages      Message[]
+  analytics     Analytics[]
+  tags          Tag[]
+  categories    Category[]
+  mediaItems    MediaItem[]
+
+  @@map("users")
+}
+
+// Sistema de Categorias
+model Category {
+  id            String    @id @default(uuid())
+  name          String
+  slug          String
+  description   String?   @db.Text
+  type          CategoryType
+  parentId      String?
+  useCount      Int       @default(0)
+  order         Int       @default(0)
+  metadata      Json?     // Dados adicionais específicos do tipo
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relações
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent        Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children      Category[] @relation("CategoryHierarchy")
+  projects      Project[]
+  posts         Post[]
+  products      Product[]
+  keywords      CategoryKeyword[]
+
+  @@unique([userId, slug])
+  @@unique([userId, name, type])
+  @@map("categories")
+}
+
+// Palavras-chave para Categorias
+model CategoryKeyword {
+  id          String    @id @default(uuid())
+  word        String
+  weight      Float     @default(1.0)
+  
+  // Relações
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, word])
+  @@map("category_keywords")
+}
+
+// Sistema de Tags
+model Tag {
+  id          String    @id @default(uuid())
+  name        String
+  slug        String
+  type        TagType   
+  useCount    Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relações
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects    Project[]
+  posts       Post[]
+  products    Product[]
+
+  @@unique([userId, slug])
+  @@unique([userId, name, type])
+  @@map("tags")
+}
+
+// Projeto
+model Project {
+  id            String    @id @default(uuid())
+  title         String
+  slug          String
+  description   String    @db.Text
+  content       String?   @db.Text
+  status        ProjectStatus @default(DRAFT)
+  featured      Boolean   @default(false)
+  order         Int       @default(0)
+  views         Int       @default(0)
+  metadata      Json?     // Dados adicionais como cliente, tecnologias, etc
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relações
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    String?
+  category      Category? @relation(fields: [categoryId], references: [id])
+  tags          Tag[]
+  media         MediaItem[]
+
+  @@unique([userId, slug])
+  @@map("projects")
+}
+
+// Post do Blog
+model Post {
+  id            String    @id @default(uuid())
+  title         String
+  slug          String
+  content       String    @db.Text
+  excerpt       String?   @db.Text
+  status        PostStatus @default(DRAFT)
+  coverImage    String?
+  views         Int       @default(0)
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relações
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    String?
+  category      Category? @relation(fields: [categoryId], references: [id])
+  tags          Tag[]
+  comments      Comment[]
+  media         MediaItem[]
+
+  @@unique([userId, slug])
+  @@map("posts")
+}
+
+// Comentários
+model Comment {
+  id            String    @id @default(uuid())
+  content       String    @db.Text
+  authorName    String
+  authorEmail   String
+  status        CommentStatus @default(PENDING)
+  parentId      String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Relações
+  postId        String
+  post          Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  parent        Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  replies       Comment[] @relation("CommentReplies")
+
+  @@map("comments")
+}
+
+// Produto (E-commerce)
+model Product {
+  id            String    @id @default(uuid())
+  name          String
+  slug          String
+  description   String    @db.Text
+  price         Decimal   @db.Decimal(10, 2)
+  comparePrice  Decimal?  @db.Decimal(10, 2)
+  cost          Decimal?  @db.Decimal(10, 2)
+  sku           String?
+  barcode       String?
+  status        ProductStatus @default(DRAFT)
+  inventory     Int       @default(0)
+  lowStock      Int       @default(5)
+  metadata      Json?     // Dados adicionais como peso, dimensões, etc
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relações
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    String?
+  category      Category? @relation(fields: [categoryId], references: [id])
+  tags          Tag[]
+  media         MediaItem[]
+  orderItems    OrderItem[]
+  variants      ProductVariant[]
+
+  @@unique([userId, slug])
+  @@unique([userId, sku])
+  @@map("products")
+}
+
+// Variantes de Produto
+model ProductVariant {
+  id            String    @id @default(uuid())
+  name          String
+  sku           String?
+  price         Decimal   @db.Decimal(10, 2)
+  inventory     Int       @default(0)
+  options       Json      // {color: "red", size: "M", etc}
+  
+  // Relações
+  productId     String
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_variants")
+}
+
+// Pedido
+model Order {
+  id              String    @id @default(uuid())
+  orderNumber     String    @unique
+  status          OrderStatus @default(PENDING)
+  subtotal        Decimal   @db.Decimal(10, 2)
+  shipping        Decimal   @db.Decimal(10, 2)
+  tax            Decimal   @db.Decimal(10, 2)
+  total          Decimal   @db.Decimal(10, 2)
+  customerEmail   String
+  customerName    String
+  shippingAddress Json
+  billingAddress  Json?
+  paymentInfo     Json?     // Informações do pagamento (processador, id transação, etc)
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relações
+  items           OrderItem[]
+  statusHistory   OrderStatusHistory[]
+
+  @@map("orders")
+}
+
+// Histórico de Status do Pedido
+model OrderStatusHistory {
+  id          String    @id @default(uuid())
+  status      OrderStatus
+  note        String?   @db.Text
+  createdAt   DateTime  @default(now())
+
+  // Relações
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_status_history")
+}
+
+// Itens do Pedido
+model OrderItem {
+  id          String    @id @default(uuid())
+  name        String    // Nome do produto no momento da compra
+  sku         String?   // SKU no momento da compra
+  quantity    Int
+  price       Decimal   @db.Decimal(10, 2)
+  metadata    Json?     // Dados adicionais como opções selecionadas
+  
+  // Relações
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product   @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+// Mensagem de Contato
+model Message {
+  id          String    @id @default(uuid())
+  name        String
+  email       String
+  phone       String?
+  subject     String?
+  content     String    @db.Text
+  status      MessageStatus @default(UNREAD)
+  metadata    Json?     // Dados adicionais como origem, página, etc
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relações
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// Sistema de Mídia
+model MediaItem {
+  id          String    @id @default(uuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  url         String
+  metadata    Json?     // Dados adicionais como dimensões, duração, etc
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relações
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projects    Project[]
+  posts       Post[]
+  products    Product[]
+
+  @@map("media_items")
+}
+
+// Analytics
+model Analytics {
+  id          String    @id @default(uuid())
+  pageView    String
+  browser     String?
+  device      String?
+  os          String?
+  location    String?
+  referrer    String?
+  duration    Int?      // Duração da visita em segundos
+  metadata    Json?     // Dados adicionais de tracking
+  createdAt   DateTime  @default(now())
+  
+  // Relações
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("analytics")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum CategoryType {
+  PROJECT
+  POST
+  PRODUCT
+  GENERAL
+}
+
+enum TagType {
+  PROJECT
+  POST
+  PRODUCT
+  GENERAL
+}
+
+enum ProjectStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum CommentStatus {
+  PENDING
+  APPROVED
+  SPAM
+  DELETED
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum MessageStatus {
+  UNREAD
+  READ
+  ARCHIVED
+  SPAM
+}

@@ -1,0 +1,38 @@
+schemaVersion: 1.0
+
+endpoints:
+  # Media Management REST API endpoints
+  - name: api-portfolio
+    service:
+      # Standard HTTPS port for REST API
+      port: 443
+    type: REST
+    # Base path configuration
+    basePath: /v1
+    # Network security settings
+    networkVisibility: 
+      private: true  # Internal network access only
+      public: true   # External access allowed
+    # Rate limiting configuration
+    rateLimiting:
+      requestsPerSecond: 100
+    # CORS configuration
+    cors:
+      enabled: true
+      allowOrigins:
+        - https://api.seudominio.com
+        - https://staging-api.seudominio.com
+    # Authentication requirements
+    security:
+      authenticationRequired: true
+      authenticationMethod: JWT
+    # Health check configuration
+    health:
+      endpoint: /health
+      interval: 30s
+      timeout: 5s
+    # Documentation
+    metadata:
+      description: "Media management service for professional portfolio platform"
+      owner: "Platform Team"
+      version: "1.0.0"

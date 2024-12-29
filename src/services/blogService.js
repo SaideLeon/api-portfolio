@@ -32,6 +32,4 @@ class BlogService {
     };
   }
 }
-module.exports = {
-  blogService: new BlogService()
-};
+module.exports = new BlogService();

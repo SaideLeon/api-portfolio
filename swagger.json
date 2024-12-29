@@ -61,350 +61,86 @@
       }
     },
     "schemas": {
-      "User": {
+      "MediaItem": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid"
           },
-          "name": {
-            "type": "string",
-            "example": "João Silva"
-          },
-          "email": {
-            "type": "string",
-            "format": "email"
-          },
-          "profession": {
-            "type": "string",
-            "example": "Fotógrafo"
-          },
-          "bio": {
+          "filename": {
             "type": "string"
           },
-          "socialLinks": {
+          "originalName": {
+            "type": "string"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "metadata": {
             "type": "object",
             "properties": {
-              "instagram": {
+              "width": {
+                "type": "integer"
+              },
+              "height": {
+                "type": "integer"
+              },
+              "duration": {
+                "type": "number"
+              },
+              "aspectRatio": {
+                "type": "number"
+              },
+              "format": {
                 "type": "string"
               },
-              "linkedin": {
-                "type": "string"
+              "optimizedVersions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "width": {
+                      "type": "integer"
+                    },
+                    "height": {
+                      "type": "integer"
+                    },
+                    "quality": {
+                      "type": "integer"
+                    },
+                    "format": {
+                      "type": "string"
+                    }
+                  }
+                }
               }
             }
           },
           "createdAt": {
             "type": "string",
             "format": "date-time"
-          }
-        }
-      },
-      "Project": {
-        "type": "object",
-        "properties": {
-          "id": {
+          },
+          "updatedAt": {
             "type": "string",
-            "format": "uuid"
-          },
-          "title": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "category": {
-            "type": "string"
-          },
-          "images": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "format": "uri"
-            }
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "date": {
-            "type": "string",
-            "format": "date"
-          },
-          "featured": {
-            "type": "boolean"
-          }
-        }
-      },
-      "Error": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
+            "format": "date-time"
           }
         }
       }
     }
   },
   "paths": {
-    "/auth/register": {
-      "post": {
-        "tags": ["auth"],
-        "summary": "Registrar novo usuário",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["name", "email", "password"],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "example": "João Silva"
-                  },
-                  "email": {
-                    "type": "string",
-                    "format": "email"
-                  },
-                  "password": {
-                    "type": "string",
-                    "format": "password",
-                    "minLength": 8
-                  },
-                  "profession": {
-                    "type": "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Usuário criado com sucesso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "user": {
-                      "$ref": "#/components/schemas/User"
-                    },
-                    "token": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Dados inválidos",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/auth/login": {
-      "post": {
-        "tags": ["auth"],
-        "summary": "Realizar login",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["email", "password"],
-                "properties": {
-                  "email": {
-                    "type": "string",
-                    "format": "email"
-                  },
-                  "password": {
-                    "type": "string",
-                    "format": "password"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Login realizado com sucesso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "token": {
-                      "type": "string"
-                    },
-                    "user": {
-                      "$ref": "#/components/schemas/User"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Credenciais inválidas"
-          }
-        }
-      }
-    },
-    "/projects": {
-      "get": {
-        "tags": ["projects"],
-        "summary": "Listar projetos",
-        "parameters": [
-          {
-            "in": "query",
-            "name": "page",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 1
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 20
-            }
-          },
-          {
-            "in": "query",
-            "name": "category",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "featured",
-            "schema": {
-              "type": "boolean"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Lista de projetos",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "data": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/schemas/Project"
-                      }
-                    },
-                    "pagination": {
-                      "type": "object",
-                      "properties": {
-                        "total": {
-                          "type": "integer"
-                        },
-                        "pages": {
-                          "type": "integer"
-                        },
-                        "current": {
-                          "type": "integer"
-                        },
-                        "hasNext": {
-                          "type": "boolean"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": ["projects"],
-        "summary": "Criar novo projeto",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["title", "description", "category"],
-                "properties": {
-                  "title": {
-                    "type": "string",
-                    "minLength": 3
-                  },
-                  "description": {
-                    "type": "string"
-                  },
-                  "category": {
-                    "type": "string"
-                  },
-                  "tags": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "featured": {
-                    "type": "boolean",
-                    "default": false
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Projeto criado com sucesso",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Project"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Dados inválidos"
-          },
-          "401": {
-            "description": "Não autorizado"
-          }
-        }
-      }
-    },
     "/media/upload": {
       "post": {
         "tags": ["media"],
@@ -419,18 +155,26 @@
             "multipart/form-data": {
               "schema": {
                 "type": "object",
+                "required": ["file"],
                 "properties": {
                   "file": {
                     "type": "string",
                     "format": "binary"
                   },
-                  "type": {
+                  "projectId": {
                     "type": "string",
-                    "enum": ["image", "document", "video"],
-                    "default": "image"
+                    "format": "uuid",
+                    "description": "ID do projeto para vincular a mídia"
                   },
-                  "folder": {
-                    "type": "string"
+                  "postId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID do post para vincular a mídia"
+                  },
+                  "productId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID do produto para vincular a mídia"
                   }
                 }
               }
@@ -438,32 +182,12 @@
           }
         },
         "responses": {
-          "200": {
+          "201": {
             "description": "Upload realizado com sucesso",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "format": "uuid"
-                    },
-                    "url": {
-                      "type": "string",
-                      "format": "uri"
-                    },
-                    "type": {
-                      "type": "string"
-                    },
-                    "size": {
-                      "type": "integer"
-                    },
-                    "createdAt": {
-                      "type": "string",
-                      "format": "date-time"
-                    }
-                  }
+                  "$ref": "#/components/schemas/MediaItem"
                 }
               }
             }
@@ -477,10 +201,10 @@
         }
       }
     },
-    "/analytics/visitors": {
+    "/media": {
       "get": {
-        "tags": ["analytics"],
-        "summary": "Obter métricas de visitantes",
+        "tags": ["media"],
+        "summary": "Listar arquivos de mídia",
         "security": [
           {
             "bearerAuth": []
@@ -489,56 +213,73 @@
         "parameters": [
           {
             "in": "query",
-            "name": "startDate",
+            "name": "mimeType",
             "schema": {
-              "type": "string",
-              "format": "date"
-            }
+              "type": "string"
+            },
+            "description": "Filtrar por tipo de mídia"
           },
           {
             "in": "query",
-            "name": "endDate",
+            "name": "projectId",
             "schema": {
               "type": "string",
-              "format": "date"
-            }
+              "format": "uuid"
+            },
+            "description": "Filtrar por projeto"
+          },
+          {
+            "in": "query",
+            "name": "postId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filtrar por post"
+          },
+          {
+            "in": "query",
+            "name": "productId",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filtrar por produto"
+          },
+          {
+            "in": "query",
+            "name": "includeProjects",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Incluir dados dos projetos relacionados"
+          },
+          {
+            "in": "query",
+            "name": "includePosts",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Incluir dados dos posts relacionados"
+          },
+          {
+            "in": "query",
+            "name": "includeProducts",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Incluir dados dos produtos relacionados"
           }
         ],
         "responses": {
           "200": {
-            "description": "Métricas de visitantes",
+            "description": "Lista de arquivos",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "totalVisitors": {
-                      "type": "integer"
-                    },
-                    "uniqueVisitors": {
-                      "type": "integer"
-                    },
-                    "averageTimeOnSite": {
-                      "type": "number"
-                    },
-                    "bounceRate": {
-                      "type": "number"
-                    },
-                    "dailyStats": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "date": {
-                            "type": "string",
-                            "format": "date"
-                          },
-                          "visitors": {
-                            "type": "integer"
-                          }
-                        }
-                      }
-                    }
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MediaItem"
                   }
                 }
               }
@@ -546,6 +287,240 @@
           },
           "401": {
             "description": "Não autorizado"
+          }
+        }
+      }
+    },
+    "/media/{id}": {
+      "delete": {
+        "tags": ["media"],
+        "summary": "Deletar arquivo",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Arquivo deletado com sucesso"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Arquivo não encontrado"
+          }
+        }
+      }
+    },
+    "/media/{id}/optimize": {
+      "post": {
+        "tags": ["media"],
+        "summary": "Otimizar imagem",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "width": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "height": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "quality": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100
+                  },
+                  "format": {
+                    "type": "string",
+                    "enum": ["jpeg", "png", "webp"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Imagem otimizada com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parâmetros inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Arquivo não encontrado"
+          }
+        }
+      }
+    },
+    "/media/{id}/relations": {
+      "post": {
+        "tags": ["media"],
+        "summary": "Adicionar relações ao arquivo",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "projectId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "postId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "productId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Relações adicionadas com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parâmetros inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Arquivo não encontrado"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["media"],
+        "summary": "Remover relações do arquivo",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "projectId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "postId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "productId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Relações removidas com sucesso",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Parâmetros inválidos"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Arquivo não encontrado"
           }
         }
       }
